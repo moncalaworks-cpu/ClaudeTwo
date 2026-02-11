@@ -18,7 +18,7 @@ This note is to capture ideas and thoughts while learning about Claude.
 ### Ideas
 - TikTok Store Front Web App
 - Facebook Market Place scanner
-- 
+-
 
 
 ### Internal Comms
@@ -35,7 +35,16 @@ This note is to capture ideas and thoughts while learning about Claude.
 - PostGreSQL Database - SQL
 
 
+### Tech Stack
+- Electron Desktop App - Typescript
+- Django REST API Framework - Python
+- PostGreSQL Database - SQL
+
+
 ## Dump Section
+
+Kill Claude app
+pkill -f "claude" || true
 
 Clear Claude cache
 rm -rf ~/.claude/cache
