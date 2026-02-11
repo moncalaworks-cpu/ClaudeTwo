@@ -1,30 +1,35 @@
 # CLAUDE_FUNDAMENTALS.md
 
-This note is to capture ideas and thoughts while learning about Claude.
+This note is to capture ideas and thoughts while learning about Claude Fundamentals.
 
 ## Main Section
 
 ### Claude features
+#### Basic
 - context - background info
-- skills -
+- skills - Roles and Capabilities
+- tools - GitHub MCP
+
+#### Intermediate
 - plugins - /greet
-- tools - MCPs
+- hooks - PreTool, PostTool, PostToolOnFailure
 - agents -
 - workflows -
-- hooks - PreTool, PostTool, PostToolOnFailure
+
+#### Advanced
 - security - protect tokens
 - vision -
 
-### Ideas
+### Project Ideas
 - TikTok Store Front Web App
 - Facebook Market Place scanner
--
 
 
 ### Internal Comms
+- Claude - AI
 - Google - Email
 - Slack - Chat
-- Notion - Product Database
+- Notion - Product Database, Deployment Ledger
 - GitHub - Repos, Projects, Actions
 - Heroku - QA and Prod environments for Next.JS Front End Container, REST API Container, PostGreSQL Database Container
 
