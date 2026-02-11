@@ -1,0 +1,96 @@
+name: Claude Architecture Analysis
+
+on:
+  workflow_dispatch:
+    inputs:
+      analysis_type:
+        description: "Type of analysis to perform"
+        required: true
+        type: choice
+        default: "full-codebase"
+        options:
+          - full-codebase
+          - security-focused
+          - performance-review
+  schedule:
+    # Run weekly on Monday at 9 AM UTC
+    - cron: "0 9 * * 1"
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+jobs:
+  architecture-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run architecture analysis
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          ANALYSIS_TYPE="${{ github.event.inputs.analysis_type }}"
+          ANALYSIS_TYPE=${ANALYSIS_TYPE:-"full-codebase"}
+
+          PROMPT="Perform a $ANALYSIS_TYPE analysis of this codebase. Focus on:
+
+          1. Overall architecture and structure
+          2. Key design patterns used
+          3. Component interactions and dependencies
+          4. Modularity and separation of concerns
+          5. Areas for improvement
+
+          Generate a comprehensive architectural report in JSON format with sections for overview, key findings, recommendations, and risk assessment."
+
+          claude --print "$PROMPT" \
+            --model sonnet \
+            --output-format json \
+            --max-budget-usd 5 > analysis-results.json 2>&1 || true
+
+          echo "Analysis complete"
+
+      - name: Upload analysis artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-analysis-${{ github.run_number }}
+          path: analysis-results.json
+          retention-days: 30
+
+      - name: Create summary issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const date = new Date().toISOString().split('T')[0];
+
+            let summary = 'Architecture analysis completed.';
+
+            try {
+              const results = fs.readFileSync('analysis-results.json', 'utf8');
+              const analysis = JSON.parse(results);
+              summary = analysis.summary || analysis.overview || summary;
+            } catch (e) {
+              console.log('Could not parse analysis results');
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `📊 Architecture Analysis - ${date}`,
+              body: `## Automated Architecture Analysis\n\n${summary}\n\n**Details:** See workflow artifacts (analysis-results.json)\n\n**Analysis Date:** ${date}`,
+              labels: ['architecture', 'automated-analysis']
+            });
+
+            console.log('Issue created successfully');

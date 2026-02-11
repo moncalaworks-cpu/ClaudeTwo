@@ -1,0 +1,76 @@
+{
+  "version": "1.0.0",
+  "purpose": "Claude Code CI/CD Configuration for Phase 4B Headless Integration",
+  "settings": {
+    "permissionMode": "acceptAll",
+    "toolRestrictions": [],
+    "safetyGuards": {
+      "maxBudgetUsd": 50,
+      "budgetAlertThreshold": 0.75,
+      "apiTimeoutSeconds": 60,
+      "maxRetries": 3
+    },
+    "models": {
+      "quickReviews": "haiku",
+      "standardReviews": "sonnet",
+      "deepAnalysis": "sonnet",
+      "documentation": "haiku"
+    },
+    "workflows": {
+      "prReview": {
+        "enabled": true,
+        "model": "sonnet",
+        "maxCostPerRun": 2.0,
+        "timeout": 600,
+        "retryOnFailure": true
+      },
+      "docsSync": {
+        "enabled": true,
+        "model": "haiku",
+        "maxCostPerRun": 1.0,
+        "timeout": 300,
+        "retryOnFailure": true
+      },
+      "architectureAnalysis": {
+        "enabled": true,
+        "model": "sonnet",
+        "maxCostPerRun": 5.0,
+        "timeout": 1800,
+        "retryOnFailure": false,
+        "schedule": "weekly"
+      },
+      "pluginTesting": {
+        "enabled": true,
+        "model": "haiku",
+        "maxCostPerRun": 0.5,
+        "timeout": 600,
+        "retryOnFailure": true
+      }
+    }
+  },
+  "authentication": {
+    "provider": "anthropic",
+    "keyLocation": "github-secrets:ANTHROPIC_API_KEY",
+    "rotationSchedule": "quarterly",
+    "minKeyAge": "86400"
+  },
+  "monitoring": {
+    "trackCosts": true,
+    "sendAlerts": true,
+    "alertEmail": "dev@example.com",
+    "logLevel": "info",
+    "metricsRetention": "30d"
+  },
+  "security": {
+    "protectedFiles": [
+      ".env",
+      ".env.local",
+      ".git/",
+      "credentials.json",
+      "*.pem",
+      "*.key"
+    ],
+    "requireApiKeyRotation": true,
+    "enableAuditLogging": true
+  }
+}
