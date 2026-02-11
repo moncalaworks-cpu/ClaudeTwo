@@ -10,7 +10,7 @@ Claude features
 - tools - MCPs
 - agents
 - workflows
-- hooks
+- hooks - PreTool, PostTool, PostToolOnFailure
 
 ## Dump Section
 
