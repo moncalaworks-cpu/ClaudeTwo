@@ -1,0 +1,142 @@
+name: Claude PR Code Review
+
+# Phase 4B: Headless Claude Code Integration for Automated PR Reviews
+# This workflow uses Claude Code to intelligently analyze pull requests
+#
+# Requirements:
+# 1. ANTHROPIC_API_KEY must be set in GitHub Secrets
+# 2. Claude Code CLI installed in workflow
+# 3. Sufficient API budget for Sonnet model reviews
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for context
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude Code Review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          # Verify API key is set
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "ERROR: ANTHROPIC_API_KEY not set in GitHub Secrets"
+            echo "See: repository Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+
+          # Fetch PR branch
+          git fetch origin pull/$PR_NUMBER/head:pr-branch
+
+          # Generate diff (limit to avoid large contexts)
+          DIFF=$(git diff main..pr-branch | head -2000)
+          DIFF_LINES=$(git diff main..pr-branch --stat)
+
+          # Create comprehensive review prompt
+          PROMPT="Review this pull request for quality and safety:
+
+PR: $PR_TITLE
+Author: $PR_AUTHOR
+
+Files changed:
+\`\`\`
+$DIFF_LINES
+\`\`\`
+
+Code diff (first 2000 lines):
+\`\`\`
+$DIFF
+\`\`\`
+
+Focus on:
+1. Code quality and architecture patterns
+2. Bug risks and edge cases
+3. Security vulnerabilities (OWASP top 10)
+4. Performance concerns
+5. Test coverage gaps
+6. Documentation needs
+
+Format: Concise feedback with specific, actionable suggestions.
+Tone: Constructive and respectful."
+
+          # Run Claude review with safety guardrails
+          claude --print "$PROMPT" \
+            --model sonnet \
+            --max-budget-usd 2 \
+            --output-format json \
+            > review_output.json 2>&1 || {
+              echo '{"error":"Claude review failed"}' > review_output.json
+            }
+
+      - name: Parse and post review
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let reviewComment = '';
+
+            try {
+              const output = fs.readFileSync('review_output.json', 'utf8');
+              const review = JSON.parse(output);
+
+              // Extract review content from Claude response
+              if (review.error) {
+                reviewComment = '⚠️ Review failed. Check workflow logs.';
+              } else if (review.content) {
+                reviewComment = review.content;
+              } else if (review.text) {
+                reviewComment = review.text;
+              } else {
+                reviewComment = JSON.stringify(review, null, 2);
+              }
+            } catch (e) {
+              console.error('Parse error:', e);
+              reviewComment = '⚠️ Could not parse Claude review. Check workflow logs: ' + e.message;
+            }
+
+            // Truncate if too long (GitHub comment limit is 65536 chars)
+            if (reviewComment.length > 60000) {
+              reviewComment = reviewComment.substring(0, 60000) + '\n\n... (truncated)';
+            }
+
+            // Post comprehensive review comment
+            const body = `## 🤖 Claude Code Review
+
+${reviewComment}
+
+---
+**Model**: Sonnet | **Budget Used**: $0-2 | **Phase**: 4B Headless Integration`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+
+            console.log('Review posted successfully');
+

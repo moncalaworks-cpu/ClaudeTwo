@@ -1,0 +1,70 @@
+name: Claude Documentation Sync
+
+# DISABLED: Workflow disabled to avoid unnecessary CI/CD runs
+# This is available as reference but not currently active
+# To re-enable, add 'on:' trigger configuration below
+
+on:
+  workflow_run:
+    workflows: ["nonexistent"] # Disabled - won't trigger
+
+permissions:
+  contents: write
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Update documentation
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Get recent changes
+          RECENT_CHANGES=$(git log -1 --name-only --oneline)
+
+          PROMPT="Review the following recent code changes and update ARCHITECTURE.md and/or README.md if needed:
+
+          Changes:
+          \`\`\`
+          $RECENT_CHANGES
+          \`\`\`
+
+          Update only if:
+          1. New major components were added
+          2. Architecture significantly changed
+          3. API or plugin structure changed
+
+          Make updates concise and accurate. Return JSON with changes made."
+
+          claude --print "$PROMPT" \
+            --model haiku \
+            --output-format json \
+            --max-budget-usd 1 > docs_update.json 2>&1 || true
+
+      - name: Commit documentation changes
+        run: |
+          git config user.name "Claude Documentation Bot"
+          git config user.email "claude-bot@anthropic.com"
+
+          git add ARCHITECTURE.md README.md 2>/dev/null || true
+
+          # Only commit if there are changes
+          if ! git diff --quiet --cached; then
+            git commit -m "docs: auto-update documentation from code changes
+
+Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>" --no-verify
+  git push
+  else
+  echo "No documentation changes needed"
+  fi

@@ -1,0 +1,170 @@
+name: Claude Plugin Testing
+
+# DISABLED: Workflow disabled to avoid unnecessary CI/CD runs
+# This is available as reference but not currently active
+# To re-enable, add 'on:' trigger configuration below
+
+on:
+  workflow_run:
+    workflows: ["nonexistent"] # Disabled - won't trigger
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  test-plugins:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        plugin:
+          [
+            greet-plugin,
+            hooks-plugin,
+            deep-analysis-plugin,
+            team-orchestration-plugin,
+          ]
+      fail-fast: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Check if plugin exists
+        id: check-plugin
+        run: |
+          if [ -d "plugins/${{ matrix.plugin }}" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install Claude Code
+        if: steps.check-plugin.outputs.exists == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Test plugin structure
+        if: steps.check-plugin.outputs.exists == 'true'
+        run: |
+          PLUGIN_DIR="plugins/${{ matrix.plugin }}"
+
+          # Check required files
+          REQUIRED_FILES=(
+            "$PLUGIN_DIR/plugin.json"
+            "$PLUGIN_DIR/.claude-plugin/plugin.json"
+            "$PLUGIN_DIR/README.md"
+          )
+
+          MISSING_FILES=()
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              MISSING_FILES+=("$file")
+            fi
+          done
+
+          if [ ${#MISSING_FILES[@]} -gt 0 ]; then
+            echo "❌ Missing required files:"
+            printf '%s\n' "${MISSING_FILES[@]}"
+            exit 1
+          fi
+
+          echo "✅ Plugin structure valid"
+
+      - name: Validate JSON files
+        if: steps.check-plugin.outputs.exists == 'true'
+        run: |
+          PLUGIN_DIR="plugins/${{ matrix.plugin }}"
+
+          for json_file in $(find "$PLUGIN_DIR" -name "*.json"); do
+            if ! jq empty "$json_file" 2>/dev/null; then
+              echo "❌ Invalid JSON: $json_file"
+              exit 1
+            fi
+            echo "✅ Valid JSON: $json_file"
+          done
+
+      - name: Run functional tests
+        if: steps.check-plugin.outputs.exists == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          PLUGIN_NAME="${{ matrix.plugin }}"
+
+          # Generate plugin-specific test prompt
+          case "$PLUGIN_NAME" in
+            greet-plugin)
+              TEST_PROMPT="Test the greet plugin by generating a greeting for a test user. Return JSON with the greeting and success status."
+              ;;
+            hooks-plugin)
+              TEST_PROMPT="Verify the hooks plugin is working by testing its core functionality. Return JSON with test results."
+              ;;
+            deep-analysis-plugin)
+              TEST_PROMPT="Test the deep-analysis plugin with a simple code analysis. Return JSON with analysis results."
+              ;;
+            team-orchestration-plugin)
+              TEST_PROMPT="Verify the team-orchestration plugin structure and basic functionality. Return JSON with status."
+              ;;
+            *)
+              TEST_PROMPT="Test the plugin by checking its basic functionality. Return JSON with results."
+              ;;
+          esac
+
+          claude --print "$TEST_PROMPT" \
+            --model haiku \
+            --output-format json \
+            --max-budget-usd 0.5 > test_output_${{ matrix.plugin }}.json 2>&1 || true
+
+          echo "Test completed"
+
+      - name: Report test results
+        if: always() && steps.check-plugin.outputs.exists == 'true'
+        run: |
+          PLUGIN_NAME="${{ matrix.plugin }}"
+          TEST_FILE="test_output_$PLUGIN_NAME.json"
+
+          if [ -f "$TEST_FILE" ]; then
+            echo "## Plugin Test Results: $PLUGIN_NAME"
+            echo ""
+            echo "\`\`\`json"
+            cat "$TEST_FILE"
+            echo "\`\`\`"
+          else
+            echo "⚠️ No test output generated for $PLUGIN_NAME"
+          fi
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plugin = '${{ matrix.plugin }}';
+            const testFile = `test_output_${plugin}.json`;
+
+            let comment = `### 🧪 Plugin Test: ${plugin}\n\n`;
+
+            if (fs.existsSync(testFile)) {
+              try {
+                const results = JSON.parse(fs.readFileSync(testFile, 'utf8'));
+                comment += `✅ Tests completed\n\n\`\`\`json\n${JSON.stringify(results, null, 2)}\n\`\`\``;
+              } catch (e) {
+                comment += `⚠️ Could not parse test results`;
+              }
+            } else {
+              comment += `⚠️ Plugin not found or tests skipped`;
+            }
+
+            // Post comment only from main job to avoid duplicates
+            if ('${{ matrix.plugin }}' === 'greet-plugin') {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `## 🧪 Plugin Test Results\n\nPlugin testing completed. See workflow logs for details.`
+              });
+            }
