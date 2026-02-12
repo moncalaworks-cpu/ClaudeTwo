@@ -38,34 +38,32 @@ jobs:
             });
 
             if (issues.data.length === 0) {
+              const date = new Date().toISOString().split('T')[0];
+              const shortCommit = commit.substring(0, 7);
+              const body = "## Production Release Review\n\n" +
+                "**Status:** Review required before production release\n\n" +
+                "**Commit:** " + shortCommit + "\n" +
+                "**Author:** " + author + "\n" +
+                "**Date:** " + new Date().toISOString() + "\n\n" +
+                "### Review Checklist\n" +
+                "- [ ] Documentation is accurate and complete\n" +
+                "- [ ] All code comments are clear\n" +
+                "- [ ] No sensitive information exposed\n" +
+                "- [ ] Examples are working and tested\n" +
+                "- [ ] Architecture decisions are documented\n" +
+                "- [ ] Breaking changes are noted\n\n" +
+                "### Next Steps\n" +
+                "1. Review the checklist items\n" +
+                "2. Approve deployment in GitHub Actions\n" +
+                "3. Production release will start automatically\n\n" +
+                "---\n" +
+                "*Automated review request - approval required to proceed*";
+
               await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                title: `📋 Document Review Required - ${new Date().toISOString().split('T')[0]}`,
-                body: `## Production Release Review
-
-**Validation Status:** ✅ All checks passed
-
-**Commit:** ${commit.substring(0, 7)}
-**Author:** @${author}
-**Date:** ${new Date().toISOString()}
-
-### Review Checklist
-- [ ] Documentation is accurate and complete
-- [ ] All code comments are clear
-- [ ] No sensitive information exposed
-- [ ] Examples are working and tested
-- [ ] Architecture decisions are documented
-- [ ] Breaking changes are noted (if any)
-
-### Next Steps
-Once review is complete:
-1. Comment \`/approve\` on this issue
-2. Production release workflow will automatically start
-3. Changes will be deployed to production
-
----
-*This is an automated review request. To proceed with release, a team member must approve.*`,
+                title: "Document Review Required - " + date,
+                body: body,
                 labels: ['release-review', 'waiting-approval']
               });
             }
@@ -85,15 +83,15 @@ Once review is complete:
 
             if (prs.data.length > 0) {
               for (const pr of prs.data) {
+                const body = "## Ready for Review\n\n" +
+                  "Push to main detected - awaiting human review and approval before production release.\n\n" +
+                  "Check the Actions tab for Review & Release workflow status.";
+
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: pr.number,
-                  body: `## ✅ Ready for Review
-
-Push to main detected - now awaiting human review and approval before production release.
-
-Check the [Review & Release workflow](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/review-and-release.yml) for approval status.`
+                  body: body
                 });
               }
             }
