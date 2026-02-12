@@ -108,7 +108,7 @@ jobs:
     steps:
       - name: Approval received
         run: |
-          echo "✅ Document review approved by: ${{ github.actor }}"
+          echo "[APPROVED] Document review approved by: ${{ github.actor }}"
           echo "Ready to proceed with production release"
 
   production-release:
@@ -152,9 +152,9 @@ jobs:
             **Approved by:** ${{ github.actor }}
 
             ### Validation Summary
-            ✅ All documentation validation passed
-            ✅ Human review approved
-            ✅ Ready for production deployment
+            [PASS] All documentation validation passed
+            [PASS] Human review approved
+            [PASS] Ready for production deployment
 
             ### What's Included
             - All documentation updates
@@ -182,7 +182,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issue.number,
-                body: `## 🚀 Release Complete
+                body: `## RELEASE COMPLETE`
 
 **Status:** Production release successful
 
@@ -204,7 +204,7 @@ All changes have been deployed to production.`
 
       - name: Send notification
         run: |
-          echo "🚀 Production release complete!"
+          echo "Production release complete!"
           echo "Version: v${{ steps.version.outputs.version }}"
           echo "Released: ${{ steps.version.outputs.timestamp }}"
           echo "Approved by: ${{ github.actor }}"
