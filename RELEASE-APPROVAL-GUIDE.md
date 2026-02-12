@@ -9,7 +9,7 @@ This guide explains how to set up and use the **Review & Release to Production**
 ## Workflow Architecture
 
 ```
-Validation Passes
+Push to main
        ↓
 Review Notification Created
        ↓
@@ -71,10 +71,10 @@ If you don't have a VERSION file, the workflow will default to `1.0.0`.
 
 The workflow is triggered automatically when:
 
-1. **Validation workflow passes** (all checks successful)
-2. **On main branch** only
+1. **Code is pushed to main branch**
+2. **Excludes:** Changes to VERSION file or this workflow file
 
-No manual action needed to start the review process.
+No manual action needed to start the review process - it runs with every push!
 
 ### Manual Review & Approval
 
@@ -104,7 +104,7 @@ No manual action needed to start the review process.
 
 #### 1. notify-review
 
-- Runs immediately after validation passes
+- Runs immediately after push to main
 - Creates GitHub Issue with review checklist
 - Posts comment on related PR (if any)
 - Status: ✅ Automatic
