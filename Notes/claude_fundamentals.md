@@ -69,7 +69,7 @@ git branch -M main
 git push -u origin main
 
 
-
+/github subscribe moncalaworks-cpu/claudetwo pulls,reviews,issues
 
 /github subscribe moncalaworks-cpu/claude-memory-docs pulls
 /github subscribe moncalaworks-cpu/claude-memory-docs pulls,reviews,issues
