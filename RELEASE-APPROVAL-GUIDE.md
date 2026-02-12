@@ -348,7 +348,8 @@ A: Review workflow doesn't run. Validation must pass first.
 
 - **review-and-release.yml** - Main workflow file (`.github/workflows/`)
 - **VERSION** - Version file (repository root)
-- **CHANGELOG.md** - Document changes for releases (recommended)
+- **RELEASE-APPROVAL-GUIDE.md** - This file
+- **HEADLESS-GUIDE.md** - Related CI/CD documentation
 
 ---
 
