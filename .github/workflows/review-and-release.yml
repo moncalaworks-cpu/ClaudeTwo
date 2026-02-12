@@ -3,10 +3,9 @@ name: Review & Release to Production
 on:
   push:
     branches: [main]
-    # Skip if only updating VERSION or this workflow file
     paths-ignore:
-      - 'VERSION'
-      - '.github/workflows/review-and-release.yml'
+      - "VERSION"
+      - ".github/workflows/review-and-release.yml"
 
 permissions:
   contents: write
@@ -25,10 +24,18 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const commit = context.payload.head_commit || context.sha;
-            const author = context.payload.pusher?.name || context.actor;
+            const date = new Date().toISOString().split('T')[0];
+            const body = "Document Review Required\n\n" +
+              "Status: Review required before production release\n\n" +
+              "Review Checklist:\n" +
+              "- [ ] Documentation accurate\n" +
+              "- [ ] Code comments clear\n" +
+              "- [ ] No secrets exposed\n" +
+              "- [ ] Examples tested\n" +
+              "- [ ] Architecture documented\n" +
+              "- [ ] Breaking changes noted\n\n" +
+              "Next: Approve in GitHub Actions to release";
 
-            // Create or update issue for review
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -38,27 +45,6 @@ jobs:
             });
 
             if (issues.data.length === 0) {
-              const date = new Date().toISOString().split('T')[0];
-              const shortCommit = commit.substring(0, 7);
-              const body = "## Production Release Review\n\n" +
-                "**Status:** Review required before production release\n\n" +
-                "**Commit:** " + shortCommit + "\n" +
-                "**Author:** " + author + "\n" +
-                "**Date:** " + new Date().toISOString() + "\n\n" +
-                "### Review Checklist\n" +
-                "- [ ] Documentation is accurate and complete\n" +
-                "- [ ] All code comments are clear\n" +
-                "- [ ] No sensitive information exposed\n" +
-                "- [ ] Examples are working and tested\n" +
-                "- [ ] Architecture decisions are documented\n" +
-                "- [ ] Breaking changes are noted\n\n" +
-                "### Next Steps\n" +
-                "1. Review the checklist items\n" +
-                "2. Approve deployment in GitHub Actions\n" +
-                "3. Production release will start automatically\n\n" +
-                "---\n" +
-                "*Automated review request - approval required to proceed*";
-
               await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -68,48 +54,15 @@ jobs:
               });
             }
 
-      - name: Find and comment on related PRs
-        uses: actions/github-script@v7
-        with:
-          script: |
-            // Find recent PRs for this commit
-            const prs = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              head: `${context.repo.owner}:${context.ref.replace('refs/heads/', '')}`,
-              per_page: 5
-            });
-
-            if (prs.data.length > 0) {
-              for (const pr of prs.data) {
-                const body = "## Ready for Review\n\n" +
-                  "Push to main detected - awaiting human review and approval before production release.\n\n" +
-                  "Check the Actions tab for Review & Release workflow status.";
-
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pr.number,
-                  body: body
-                });
-              }
-            }
-
-  # This job requires manual approval via GitHub Environment
   approval-gate:
     name: Await Human Review & Approval
     runs-on: ubuntu-latest
     needs: notify-review
     environment:
       name: Production Release
-      # Add required reviewers in GitHub UI:
-      # Settings → Environments → Production Release → Required reviewers
     steps:
       - name: Approval received
-        run: |
-          echo "[APPROVED] Document review approved by: ${{ github.actor }}"
-          echo "Ready to proceed with production release"
+        run: echo "[APPROVED] Document review approved"
 
   production-release:
     name: Release to Production
@@ -123,7 +76,6 @@ jobs:
       - name: Get version
         id: version
         run: |
-          # Extract version from package.json or VERSION file
           VERSION=$(cat VERSION 2>/dev/null || echo "1.0.0")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "timestamp=$(date -u +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_OUTPUT
@@ -132,9 +84,8 @@ jobs:
         run: |
           git config user.name "Release Bot"
           git config user.email "release@example.com"
-
-          TAG="v${{ steps.version.outputs.version }}-${{ steps.version.outputs.timestamp }}"
-          git tag -a "$TAG" -m "Production release - ${{ steps.version.outputs.timestamp }}"
+          TAG="v${{ steps.version.outputs.version }}"
+          git tag -a "$TAG" -m "Production release"
           git push origin "$TAG"
 
       - name: Create GitHub Release
@@ -144,30 +95,14 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.version }}
           release_name: Release ${{ steps.version.outputs.version }}
-          body: |
-            ## Production Release
-
-            **Version:** ${{ steps.version.outputs.version }}
-            **Released:** ${{ steps.version.outputs.timestamp }}
-            **Approved by:** ${{ github.actor }}
-
-            ### Validation Summary
-            [PASS] All documentation validation passed
-            [PASS] Human review approved
-            [PASS] Ready for production deployment
-
-            ### What's Included
-            - All documentation updates
-            - Code changes from recent commits
-            - Configuration updates
+          body: "Production release v${{ steps.version.outputs.version }}"
           draft: false
           prerelease: false
 
-      - name: Notify release completion
+      - name: Notify completion
         uses: actions/github-script@v7
         with:
           script: |
-            // Find and close the review issue
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -182,15 +117,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issue.number,
-                body: `## RELEASE COMPLETE`
-
-**Status:** Production release successful
-
-**Version:** v${{ steps.version.outputs.version }}
-**Released:** ${{ steps.version.outputs.timestamp }}
-**Approved by:** @${{ github.actor }}
-
-All changes have been deployed to production.`
+                body: "Release Complete - v${{ steps.version.outputs.version }} deployed"
               });
 
               await github.rest.issues.update({
@@ -201,10 +128,3 @@ All changes have been deployed to production.`
                 labels: ['release-review', 'completed']
               });
             }
-
-      - name: Send notification
-        run: |
-          echo "Production release complete!"
-          echo "Version: v${{ steps.version.outputs.version }}"
-          echo "Released: ${{ steps.version.outputs.timestamp }}"
-          echo "Approved by: ${{ github.actor }}"
