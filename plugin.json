@@ -1,0 +1,197 @@
+{
+  "name": "Universal Claude Developer Toolkit",
+  "version": "1.0.0",
+  "description": "Tech-stack-agnostic developer toolkit for .NET, Django, and Next.js projects. Auto-detects your framework and provides intelligent code analysis, generation, testing, security scanning, and optimization.",
+  "author": "Claude Haiku 4.5",
+  "license": "MIT",
+  "repository": "https://github.com/moncalaworks-cpu/ClaudeTwo",
+  "keywords": [
+    "code-analysis",
+    "testing",
+    "security",
+    "performance",
+    "dotnet",
+    "django",
+    "nextjs",
+    "code-generation",
+    "documentation"
+  ],
+  "main": "commands",
+  "commands": [
+    {
+      "name": "setup",
+      "description": "Auto-detect project framework and initialize toolkit",
+      "file": "commands/setup.md",
+      "model": "haiku"
+    },
+    {
+      "name": "analyze-code",
+      "description": "Framework-aware code quality and architecture analysis",
+      "file": "commands/analyze-code.md",
+      "model": "sonnet"
+    },
+    {
+      "name": "generate-tests",
+      "description": "Generate idiomatic test code for your framework",
+      "file": "commands/generate-tests.md",
+      "model": "sonnet"
+    },
+    {
+      "name": "generate-component",
+      "description": "Generate framework-specific component or model scaffolding",
+      "file": "commands/generate-component.md",
+      "model": "haiku"
+    },
+    {
+      "name": "security-scan",
+      "description": "OWASP Top 10 and framework-specific security analysis",
+      "file": "commands/security-scan.md",
+      "model": "sonnet"
+    },
+    {
+      "name": "database-review",
+      "description": "Analyze database schema and queries for optimization",
+      "file": "commands/database-review.md",
+      "model": "sonnet"
+    },
+    {
+      "name": "generate-docs",
+      "description": "Auto-generate API, architecture, or setup documentation",
+      "file": "commands/generate-docs.md",
+      "model": "haiku"
+    },
+    {
+      "name": "performance-profile",
+      "description": "Identify performance bottlenecks and optimization opportunities",
+      "file": "commands/performance-profile.md",
+      "model": "sonnet"
+    }
+  ],
+  "skills": [
+    {
+      "name": "project-detection",
+      "description": "Framework detection and configuration loading",
+      "file": "skills/project-detection.md"
+    },
+    {
+      "name": "dotnet-expert",
+      "description": "C#, ASP.NET Core, Entity Framework Core, MS SQL Server patterns",
+      "file": "skills/dotnet-expert.md"
+    },
+    {
+      "name": "django-expert",
+      "description": "Django, Django REST Framework, async patterns, PostgreSQL",
+      "file": "skills/django-expert.md"
+    },
+    {
+      "name": "nextjs-expert",
+      "description": "Next.js, React hooks, Server Components, TypeScript patterns",
+      "file": "skills/nextjs-expert.md"
+    },
+    {
+      "name": "sql-patterns",
+      "description": "Query optimization for MS SQL Server and PostgreSQL",
+      "file": "skills/sql-patterns.md"
+    },
+    {
+      "name": "security-patterns",
+      "description": "OWASP Top 10 mitigation patterns for all frameworks",
+      "file": "skills/security-patterns.md"
+    },
+    {
+      "name": "performance-patterns",
+      "description": "Optimization patterns for N+1 queries, caching, async operations",
+      "file": "skills/performance-patterns.md"
+    },
+    {
+      "name": "testing-patterns",
+      "description": "Test patterns for xUnit, pytest, and Jest",
+      "file": "skills/testing-patterns.md"
+    }
+  ],
+  "templates": [
+    {
+      "name": "dotnet-controller",
+      "description": "ASP.NET Core API Controller",
+      "file": "templates/dotnet-controller.template.cs",
+      "framework": "dotnet"
+    },
+    {
+      "name": "dotnet-dbcontext",
+      "description": "Entity Framework Core DbContext",
+      "file": "templates/dotnet-dbcontext.template.cs",
+      "framework": "dotnet"
+    },
+    {
+      "name": "django-viewset",
+      "description": "Django REST Framework ViewSet",
+      "file": "templates/django-viewset.template.py",
+      "framework": "django"
+    },
+    {
+      "name": "django-model",
+      "description": "Django Model with relationships and validation",
+      "file": "templates/django-model.template.py",
+      "framework": "django"
+    },
+    {
+      "name": "nextjs-server-component",
+      "description": "Next.js Server Component with async data",
+      "file": "templates/nextjs-server-component.template.tsx",
+      "framework": "nextjs"
+    },
+    {
+      "name": "nextjs-client-component",
+      "description": "Next.js Client Component with hooks",
+      "file": "templates/nextjs-client-component.template.tsx",
+      "framework": "nextjs"
+    },
+    {
+      "name": "nextjs-api-route",
+      "description": "Next.js API Route handler",
+      "file": "templates/nextjs-api-route.template.ts",
+      "framework": "nextjs"
+    },
+    {
+      "name": "test-examples",
+      "description": "Test examples for xUnit, pytest, and Jest",
+      "file": "templates/test-examples.template.md",
+      "framework": "all"
+    }
+  ],
+  "supportedFrameworks": [
+    {
+      "name": ".NET/C#",
+      "id": "dotnet",
+      "version": "8.0+",
+      "detection": [".csproj", ".sln", "global.json"]
+    },
+    {
+      "name": "Django",
+      "id": "django",
+      "version": "4.0+",
+      "detection": ["manage.py", "settings.py"]
+    },
+    {
+      "name": "Next.js",
+      "id": "nextjs",
+      "version": "13.0+",
+      "detection": ["next.config.js", "next.config.mjs"]
+    }
+  ],
+  "features": {
+    "autoDetection": true,
+    "caching": true,
+    "costOptimized": true,
+    "extensible": true
+  },
+  "estimatedCosts": {
+    "setup": 0.005,
+    "analyzeCode": "0.10-0.30",
+    "generateTests": "0.20-0.40",
+    "securityScan": "0.15-0.50",
+    "databaseReview": "0.10-0.30",
+    "fullAudit": "< 2.00"
+  },
+  "releaseNotes": "v1.0.0-MVP: Initial release with support for .NET, Django, and Next.js. Includes 8 core commands, 8 expert skills, and 8+ reusable templates. Auto-framework detection and comprehensive documentation included."
+}
