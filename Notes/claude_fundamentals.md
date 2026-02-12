@@ -20,11 +20,12 @@ Common Tasks
 
 #### Basic
   - context - background info
+  - memory - 
+  - plugins - /greet
   - skills - Roles and Capabilities
   - tools - GitHub MCP
 
 #### Intermediate
-  - plugins - /greet
   - hooks - PreTool, PostTool, PostToolOnFailure
   - agents -
   - workflows - parallel, sequential, conditional
