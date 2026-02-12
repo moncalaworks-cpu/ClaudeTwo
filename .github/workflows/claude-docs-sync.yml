@@ -1,19 +1,12 @@
 name: Claude Documentation Sync
 
-# DISABLED: To save costs on Anthropic API
-# Uncomment below to enable documentation sync on code changes
-# on:
-#   push:
-#     branches: [main]
-#     paths:
-#       - "src/**/*.ts"
-#       - "src/**/*.js"
-#       - "plugins/**/*.ts"
-#       - "plugins/**/*.json"
-#       - "!*.md"
+# DISABLED: Workflow disabled to avoid unnecessary CI/CD runs
+# This is available as reference but not currently active
+# To re-enable, add 'on:' trigger configuration below
 
 on:
-  workflow_dispatch: # Manual trigger only
+  workflow_run:
+    workflows: ["nonexistent"] # Disabled - won't trigger
 
 permissions:
   contents: write

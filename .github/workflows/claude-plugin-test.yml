@@ -1,22 +1,12 @@
 name: Claude Plugin Testing
 
-# DISABLED: To save costs on Anthropic API
-# Uncomment below to enable automatic plugin testing
-# on:
-#   push:
-#     branches: [main]
-#     paths:
-#       - "plugins/**/*"
-#       - ".claude/plugins/**/*"
-#       - ".github/workflows/claude-plugin-test.yml"
-#   pull_request:
-#     branches: [main]
-#     paths:
-#       - "plugins/**/*"
-#       - ".claude/plugins/**/*"
+# DISABLED: Workflow disabled to avoid unnecessary CI/CD runs
+# This is available as reference but not currently active
+# To re-enable, add 'on:' trigger configuration below
 
 on:
-  workflow_dispatch: # Manual trigger only
+  workflow_run:
+    workflows: ["nonexistent"] # Disabled - won't trigger
 
 permissions:
   contents: read

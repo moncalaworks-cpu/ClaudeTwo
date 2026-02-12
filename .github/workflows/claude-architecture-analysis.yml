@@ -1,23 +1,12 @@
 name: Claude Architecture Analysis
 
-# DISABLED: To save costs on Anthropic API
-# Uncomment schedule below to enable weekly analysis
-# Uncomment workflow_dispatch to enable manual triggering
+# DISABLED: Workflow disabled to avoid unnecessary CI/CD runs
+# This is available as reference but not currently active
+# To re-enable, add 'on:' trigger configuration below
+
 on:
-  workflow_dispatch:
-    inputs:
-      analysis_type:
-        description: "Type of analysis to perform"
-        required: true
-        type: choice
-        default: "full-codebase"
-        options:
-          - full-codebase
-          - security-focused
-          - performance-review
-  # schedule:
-  #   # Run weekly on Monday at 9 AM UTC
-  #   - cron: "0 9 * * 1"
+  workflow_run:
+    workflows: ["nonexistent"] # Disabled - won't trigger
 
 permissions:
   contents: read
