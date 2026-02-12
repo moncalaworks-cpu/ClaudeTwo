@@ -1,9 +1,14 @@
 name: Claude PR Code Review
 
+# DISABLED: To save costs on Anthropic API
+# Uncomment below to enable PR code reviews
+# on:
+#   pull_request:
+#     types: [opened, synchronize, reopened]
+#     branches: [main]
+
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches: [main]
+  workflow_dispatch: # Manual trigger only
 
 permissions:
   contents: read
