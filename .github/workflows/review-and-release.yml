@@ -86,6 +86,10 @@ jobs:
           git config user.name "Release Bot"
           git config user.email "release@example.com"
           TAG="v${{ steps.version.outputs.version }}"
+          # Delete tag if it already exists locally and on remote
+          git tag -d "$TAG" 2>/dev/null || true
+          git push origin :refs/tags/"$TAG" 2>/dev/null || true
+          # Create and push new tag
           git tag -a "$TAG" -m "Production release"
           git push origin "$TAG"
 
