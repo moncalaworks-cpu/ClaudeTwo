@@ -63,6 +63,22 @@ Common Tasks
 
 
 ## Dump Section
+cd /Users/kenshinzato/repos/ClaudeTwo
+git remote add origin https://github.com/moncalaworks-cpu/ClaudeTwo.git
+git branch -M main
+git push -u origin main
+
+
+
+
+/github subscribe moncalaworks-cpu/claude-memory-docs pulls
+/github subscribe moncalaworks-cpu/claude-memory-docs pulls,reviews,issues
+
+  /github subscribe moncalaworks-cpu/claude-memory-docs pulls                    # All PR activity
+  /github subscribe owner/repo pulls reviews            # Only reviews
+  /github subscribe owner/repo issues,pulls,reviews     # Multiple event types
+  /github subscribe owner/repo reviews:action:requested # Only review requests
+
 
 Kill Claude app
 pkill -f "claude" || true
